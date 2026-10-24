@@ -7,6 +7,14 @@
               <img src="/icons/upi.svg" alt="UPI" class="ypg-tab-icon" style="height:15px;" />
               <span>UPI QR</span>
             </button>
+            <button type="button" class="ypg-method-tab" id="tabMethodCardOnline" onclick="selectPaymentMethod('CARD')" style="{{TAB_CARD_ONLINE_STYLE}}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <span>Card</span>
+            </button>
+            <button type="button" class="ypg-method-tab" id="tabMethodNetbanking" onclick="selectPaymentMethod('NETBANKING')" style="{{TAB_NETBANKING_STYLE}}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle;"><path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"/></svg>
+              <span>Netbanking</span>
+            </button>
             <button type="button" class="ypg-method-tab" id="tabMethodCod" onclick="selectPaymentMethod('COD')"
               style="{{TAB_COD_STYLE}}">
               <img src="/icons/cash.svg" alt="COD" class="ypg-tab-icon" style="height:14px; width:14px;" />
@@ -20,7 +28,7 @@
             <button type="button" class="ypg-method-tab" id="tabMethodCard"
               onclick="selectPaymentMethod('CARD_COUNTER')" style="{{TAB_CARD_STYLE}}">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-              <span>Card</span>
+              <span>Card (POS)</span>
             </button>
           </div>
 
@@ -32,9 +40,9 @@
               <div class="ypg-pc-method-card is-active" id="pcMethodCardUpi" onclick="selectPaymentMethod('UPI')">
                 <div class="ypg-pc-method-header">
                   <img src="/icons/upi.svg" alt="UPI" style="height:15px; margin-right:6px; vertical-align:middle;" />
-                  <div class="ypg-pc-method-title">UPI QR</div>
+                  <div class="ypg-pc-method-title">UPI QR &amp; Apps</div>
                 </div>
-                <div class="ypg-pc-method-sub">Scan &amp; Pay via UPI Apps</div>
+                <div class="ypg-pc-method-sub">Scan &amp; Pay via GPay, PhonePe, Paytm</div>
                 <div class="ypg-pc-method-icons">
                   <img class="ypg-pc-mini-icon" src="/icons/gpay.png"
                     onerror="if(window.FALLBACK_ICONS)this.src=window.FALLBACK_ICONS.gpay" alt="GPay" />
@@ -45,6 +53,31 @@
                   <img class="ypg-pc-mini-icon" src="/icons/cred.png"
                     onerror="if(window.FALLBACK_ICONS)this.src=window.FALLBACK_ICONS.cred" alt="CRED" />
                 </div>
+              </div>
+
+              <!-- Online Card (Credit / Debit) [Online Mode] -->
+              <div class="ypg-pc-method-card" id="pcMethodCardCardOnline" onclick="selectPaymentMethod('CARD')" style="{{PC_CARD_ONLINE_STYLE}}">
+                <div class="ypg-pc-method-header">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px; vertical-align:middle; color:#0b63e5;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  <div class="ypg-pc-method-title">Cards</div>
+                  <span class="ypg-pc-cash-pill" style="background:#e0f2fe; color:#0369a1;">Instant</span>
+                </div>
+                <div class="ypg-pc-method-sub">Visa, Mastercard, RuPay</div>
+                <div class="ypg-pc-method-icons" style="gap:5px; margin-top:6px; display:flex; align-items:center;">
+                  <img src="/icons/visa.svg" alt="Visa" style="height:14px; width:auto; object-fit:contain;" />
+                  <img src="/icons/mastercard.svg" alt="Mastercard" style="height:14px; width:auto; object-fit:contain;" />
+                  <img src="/icons/rupay.svg" alt="RuPay" style="height:14px; width:auto; object-fit:contain;" />
+                </div>
+              </div>
+
+              <!-- Netbanking [Online Mode] -->
+              <div class="ypg-pc-method-card" id="pcMethodCardNetbanking" onclick="selectPaymentMethod('NETBANKING')" style="{{PC_NETBANKING_STYLE}}">
+                <div class="ypg-pc-method-header">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px; vertical-align:middle; color:#0b63e5;"><path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"/></svg>
+                  <div class="ypg-pc-method-title">Netbanking</div>
+                  <span class="ypg-pc-cash-pill" style="background:#f0fdf4; color:#15803d;">All Banks</span>
+                </div>
+                <div class="ypg-pc-method-sub">HDFC, SBI, ICICI, Axis &amp; 50+ Banks</div>
               </div>
 
               <!-- Cash at Till Card (Offline Mode) -->
@@ -172,21 +205,174 @@
                     </div>
                   </div>
                 </div>
-                <!-- UPI Payment Instructions Guide -->
-                <div class="ypg-instructions-card">
-                  <div class="ypg-instruction-step">
-                    <div class="ypg-step-num">1</div>
-                    <div>Open any UPI App on your phone (Google Pay, PhonePe, Paytm, CRED).</div>
+                <!-- Direct UTR / Ref Number Instant Verification (Razorpay Style) -->
+                <div class="ypg-utr-verify-card">
+                  <div class="ypg-utr-card-header">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0b63e5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <span>Already Paid? Confirm Instantly</span>
                   </div>
-                  <div class="ypg-instruction-step">
-                    <div class="ypg-step-num">2</div>
-                    <div>Scan the QR code above and complete the payment of <strong>₹{{AMOUNT}}</strong>.</div>
+                  <div class="ypg-utr-card-sub">Enter the 12-digit UPI Ref / UTR number from your payment receipt for zero-wait instant confirmation:</div>
+                  <div class="ypg-utr-input-row">
+                    <input type="text" id="upiManualUtrInput" class="ypg-utr-input" placeholder="e.g. 429718294821" maxlength="12" inputmode="numeric" />
+                    <button type="button" class="ypg-utr-submit-btn" id="btnSubmitUtr" onclick="submitManualUtr()">
+                      <span>Verify UTR</span>
+                    </button>
                   </div>
-                  <div class="ypg-instruction-step">
-                    <div class="ypg-step-num">3</div>
-                    <div>Payment is detected automatically, or tap <strong>Continue</strong> below after paying.</div>
+                  <div id="utrFeedbackMsg" class="ypg-utr-feedback" style="display:none;"></div>
+                </div>
+              </div>
+
+              <!-- VIEW CARD ONLINE: CARDS (CREDIT / DEBIT / PREPAID) -->
+              <div id="viewOnlineCardContent" hidden>
+                <div class="ypg-section-label-row" style="margin-top:0; margin-bottom:12px;">
+                  <h2 class="ypg-page-title" style="margin-bottom:0;">Card Payment</h2>
+                  <div class="ypg-countdown-pill" id="cardTimerBadge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    <span id="cardTimerText">05:00</span>
                   </div>
                 </div>
+
+                <!-- Reassurance Badge -->
+                <div class="ypg-offers-pill" style="background:#f0f9ff; border-color:#bae6fd;">
+                  <div class="ypg-offers-left">
+                    <div class="ypg-offer-icon-badge" style="background:#0284c7; color:#fff; display:flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <span style="color:#0369a1; font-weight:700;">Instant 3D Secure Authorization</span>
+                  </div>
+                  <div class="ypg-offers-right">
+                    <span style="color:#0284c7;">100% Encrypted</span>
+                  </div>
+                </div>
+
+                <!-- Test Cards Helper Chips -->
+                <div class="ypg-test-cards-bar">
+                  <span class="ypg-test-label">Quick Test Cards:</span>
+                  <button type="button" class="ypg-chip-test-card" onclick="fillTestCard('visa')">Visa (4111)</button>
+                  <button type="button" class="ypg-chip-test-card" onclick="fillTestCard('mastercard')">Mastercard (5123)</button>
+                  <button type="button" class="ypg-chip-test-card" onclick="fillTestCard('rupay')">RuPay (5081)</button>
+                </div>
+
+                <!-- Interactive Card Form -->
+                <div class="ypg-card-form-box">
+                  <div class="ypg-form-group">
+                    <label class="ypg-form-label" for="cardInputNumber">Card Number</label>
+                    <div class="ypg-input-with-brand">
+                      <input type="text" id="cardInputNumber" class="ypg-form-input" placeholder="•••• •••• •••• ••••" maxlength="19" inputmode="numeric" oninput="handleCardNumberInput(this)" />
+                      <div class="ypg-card-brand-indicator" id="cardBrandIndicator">
+                        <img id="cardBrandImg" src="/icons/visa.svg" alt="Card Brand" style="height:16px; display:none;" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="ypg-form-row" style="display:flex; gap:12px;">
+                    <div class="ypg-form-group" style="flex:1;">
+                      <label class="ypg-form-label" for="cardInputExpiry">Expires (MM/YY)</label>
+                      <input type="text" id="cardInputExpiry" class="ypg-form-input" placeholder="MM / YY" maxlength="7" inputmode="numeric" oninput="handleCardExpiryInput(this)" />
+                    </div>
+                    <div class="ypg-form-group" style="flex:1;">
+                      <label class="ypg-form-label" for="cardInputCvv">
+                        <span>CVV</span>
+                        <span class="ypg-cvv-tip" title="3-digit security code on the back of card">ⓘ</span>
+                      </label>
+                      <input type="password" id="cardInputCvv" class="ypg-form-input" placeholder="•••" maxlength="4" inputmode="numeric" />
+                    </div>
+                  </div>
+
+                  <div class="ypg-form-group">
+                    <label class="ypg-form-label" for="cardInputName">Cardholder Name</label>
+                    <input type="text" id="cardInputName" class="ypg-form-input" placeholder="Name as printed on card" autocomplete="cc-name" />
+                  </div>
+
+                  <div class="ypg-save-card-row">
+                    <label class="ypg-checkbox-label">
+                      <input type="checkbox" id="cardSaveCheckbox" checked />
+                      <span>Save card securely for future purchases (RBI compliant tokenization)</span>
+                    </label>
+                  </div>
+
+                  <button type="button" class="ypg-btn-auth-action" id="btnPayOnlineCard" onclick="submitOnlineCardPayment()" style="background:#0b63e5; font-size:14.5px; padding:13px; margin-top:8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px; vertical-align:middle;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Pay ₹{{AMOUNT}}</span> &rsaquo;
+                  </button>
+
+                  <div class="ypg-card-trust-row">
+                    <img src="/icons/visa.svg" alt="Visa" style="height:14px;" />
+                    <img src="/icons/mastercard.svg" alt="Mastercard" style="height:14px;" />
+                    <img src="/icons/rupay.svg" alt="RuPay" style="height:14px;" />
+                    <span style="font-size:10.5px; color:#64748b; margin-left:auto;">256-Bit SSL Encrypted</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW NETBANKING: POPULAR BANKS & 50+ BANKS -->
+              <div id="viewNetbankingContent" hidden>
+                <div class="ypg-section-label-row" style="margin-top:0; margin-bottom:12px;">
+                  <h2 class="ypg-page-title" style="margin-bottom:0;">Netbanking</h2>
+                  <div class="ypg-countdown-pill" id="nbTimerBadge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    <span id="nbTimerText">05:00</span>
+                  </div>
+                </div>
+
+                <div style="font-size:12px; color:#64748b; margin-bottom:12px;">Select from popular banks or choose from 50+ supported Indian banks:</div>
+
+                <!-- Popular Banks Grid (Razorpay Exact Pattern) -->
+                <div class="ypg-nb-grid">
+                  <div class="ypg-nb-bank-tile is-selected" data-bank="HDFC" onclick="selectNetbank('HDFC', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">HDFC Bank</span>
+                  </div>
+                  <div class="ypg-nb-bank-tile" data-bank="SBI" onclick="selectNetbank('SBI', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">State Bank of India</span>
+                  </div>
+                  <div class="ypg-nb-bank-tile" data-bank="ICICI" onclick="selectNetbank('ICICI', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">ICICI Bank</span>
+                  </div>
+                  <div class="ypg-nb-bank-tile" data-bank="AXIS" onclick="selectNetbank('AXIS', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">Axis Bank</span>
+                  </div>
+                  <div class="ypg-nb-bank-tile" data-bank="KOTAK" onclick="selectNetbank('KOTAK', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">Kotak Mahindra</span>
+                  </div>
+                  <div class="ypg-nb-bank-tile" data-bank="PNB" onclick="selectNetbank('PNB', this)">
+                    <div class="ypg-nb-tile-radio"></div>
+                    <span class="ypg-nb-tile-name">Punjab National</span>
+                  </div>
+                </div>
+
+                <!-- Dropdown for Other Banks -->
+                <div class="ypg-form-group" style="margin-top:14px;">
+                  <label class="ypg-form-label" for="selectOtherBanks">Or choose from 50+ other banks:</label>
+                  <select id="selectOtherBanks" class="ypg-form-select" onchange="handleOtherBankSelect(this)">
+                    <option value="">-- Select Another Bank --</option>
+                    <option value="BOB">Bank of Baroda</option>
+                    <option value="CANARA">Canara Bank</option>
+                    <option value="UNION">Union Bank of India</option>
+                    <option value="INDUSIND">IndusInd Bank</option>
+                    <option value="YES">Yes Bank</option>
+                    <option value="IDBI">IDBI Bank</option>
+                    <option value="FEDERAL">Federal Bank</option>
+                    <option value="IDFC">IDFC FIRST Bank</option>
+                    <option value="RBL">RBL Bank</option>
+                    <option value="BOI">Bank of India</option>
+                    <option value="CENTRAL">Central Bank of India</option>
+                    <option value="INDIAN">Indian Bank</option>
+                    <option value="IOB">Indian Overseas Bank</option>
+                    <option value="UCO">UCO Bank</option>
+                    <option value="BANDHAN">Bandhan Bank</option>
+                    <option value="AUBANK">AU Small Finance Bank</option>
+                  </select>
+                </div>
+
+                <button type="button" class="ypg-btn-auth-action" id="btnPayOnlineNb" onclick="submitNetbankingPayment()" style="background:#0b63e5; font-size:14.5px; padding:13px; margin-top:14px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px; vertical-align:middle;"><path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"/></svg>
+                  <span id="btnPayNbText">Pay via HDFC Bank (₹{{AMOUNT}})</span> &rsaquo;
+                </button>
               </div>
 
               <!-- VIEW COD: CASH ON DELIVERY (ONLINE SELLING MODE) -->

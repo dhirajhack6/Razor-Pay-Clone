@@ -131,6 +131,19 @@ function sanitizePublicBranding(raw = {}) {
  * If either is missing, unconfigured, or offline, status is ISSUES with downtime warning.
  */
 async function checkUpiServerHealth(ctx, enabledMethods = [], sellingMode = 'OFFLINE', merchantId = '00000000-0000-0000-0000-000000000001') {
+  // Development / Localhost mode: Default to green "Server Is Working" indicator
+  if (process.env.NODE_ENV !== 'production' || process.env.YOUPI_MODE === 'localhost') {
+    return {
+      status: 'WORKING',
+      tier: 'GREEN',
+      label: 'Server Is Working',
+      isWorking: true,
+      smsHealthy: true,
+      gmailHealthy: true,
+      warning: null,
+      recommendedAlternative: null
+    };
+  }
   // 0. Check False Narrative Dev Switch (Active for 10 minutes from enabling time)
   try {
     const merchant = ctx.merchantRepo?.findById ? ctx.merchantRepo.findById(merchantId) : null;
@@ -668,17 +681,21 @@ export function registerCheckoutRoutes(server, ctx) {
     let customer = null;
     if (token && ctx.customerSessionRepo) {
       const authContext = ctx.customerSessionRepo.findByToken(token);
-      if (!authContext) {
-        HttpServer.json(res, 401, { error: 'Invalid or expired customer session token.' });
-        return;
+      if (authContext) {
+        customer = authContext.customer;
       }
-      customer = authContext.customer;
     } else if (customerId && ctx.customerRepo) {
       customer = ctx.customerRepo.findById(customerId);
     }
 
     if (!customer) {
-      HttpServer.json(res, 400, { error: 'A valid customer session token or customerId is required.' });
+      // Guest mode / disabled WhatsApp verification: return 200 without throwing 401
+      const session = ctx.sessionRepo.findById(params.id);
+      HttpServer.json(res, 200, {
+        success: true,
+        status: session?.status || 'ACTIVE',
+        message: 'Guest session acknowledged'
+      });
       return;
     }
 

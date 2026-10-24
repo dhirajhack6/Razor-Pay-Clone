@@ -417,41 +417,25 @@
     let otpCooldownSec = 0;
 
     function setGatewayAuthMode(isAuthView) {
+      // WhatsApp verification disabled: Always show payment options directly
       const authEl = document.getElementById('preGatewayAuthView');
       const payEl = document.getElementById('paymentGatewayInterface');
       const footerEl = document.getElementById('ypgStickyFooter');
       const pcTopbarTitle = document.querySelector('.ypg-pc-topbar-title');
 
-      if (isAuthView) {
-        if (authEl) {
-          authEl.hidden = false;
-          authEl.style.removeProperty('display');
-        }
-        if (payEl) {
-          payEl.hidden = true;
-          payEl.style.setProperty('display', 'none', 'important');
-        }
-        if (footerEl) {
-          footerEl.style.display = 'none';
-        }
-        if (pcTopbarTitle) {
-          pcTopbarTitle.textContent = 'Sign in to Pay';
-        }
-      } else {
-        if (authEl) {
-          authEl.hidden = true;
-          authEl.style.setProperty('display', 'none', 'important');
-        }
-        if (payEl) {
-          payEl.hidden = false;
-          payEl.style.removeProperty('display');
-        }
-        if (footerEl) {
-          footerEl.style.display = '';
-        }
-        if (pcTopbarTitle) {
-          pcTopbarTitle.textContent = 'Payment Options';
-        }
+      if (authEl) {
+        authEl.hidden = true;
+        authEl.style.setProperty('display', 'none', 'important');
+      }
+      if (payEl) {
+        payEl.hidden = false;
+        payEl.style.removeProperty('display');
+      }
+      if (footerEl) {
+        footerEl.style.display = '';
+      }
+      if (pcTopbarTitle) {
+        pcTopbarTitle.textContent = 'Payment Options';
       }
     }
 
@@ -965,6 +949,10 @@
 
     function hideAllContent() {
       document.getElementById('viewUpiContent').hidden = true;
+      const vCardOnline = document.getElementById('viewOnlineCardContent');
+      if (vCardOnline) vCardOnline.hidden = true;
+      const vNetbanking = document.getElementById('viewNetbankingContent');
+      if (vNetbanking) vNetbanking.hidden = true;
       const vCod = document.getElementById('viewCodContent');
       if (vCod) vCod.hidden = true;
       const vCash = document.getElementById('viewCashContent');
@@ -1031,7 +1019,7 @@
     function renderMethodSelectorBar(data) {
       const bar = document.getElementById('paymentMethodSelectorBar');
       const sellingMode = data.sellingMode || 'ONLINE';
-      const enabledMethods = data.enabledMethods || ['UPI'];
+      const enabledMethods = data.enabledMethods || ['UPI', 'CARD', 'NETBANKING'];
 
       // Populate authenticated customer into COD view
       const c = data.customer || activeCustomer;
@@ -1057,6 +1045,8 @@
       }
 
       const tabUpi = document.getElementById('tabMethodUpi');
+      const tabCardOnline = document.getElementById('tabMethodCardOnline');
+      const tabNetbanking = document.getElementById('tabMethodNetbanking');
       const tabCod = document.getElementById('tabMethodCod');
       const tabCash = document.getElementById('tabMethodCash');
       const tabCard = document.getElementById('tabMethodCard');
@@ -1064,6 +1054,8 @@
       if (tabUpi) tabUpi.style.display = 'inline-flex';
 
       const pcUpi = document.getElementById('pcMethodCardUpi');
+      const pcCardOnline = document.getElementById('pcMethodCardCardOnline');
+      const pcNetbanking = document.getElementById('pcMethodCardNetbanking');
       const pcCod = document.getElementById('pcMethodCardCod');
       const pcCash = document.getElementById('pcMethodCardCash');
       const pcCard = document.getElementById('pcMethodCardCard');
@@ -1071,13 +1063,16 @@
       if (pcUpi) pcUpi.style.display = 'block';
 
       if (sellingMode === 'ONLINE') {
-        // Online Selling Mode:
-        // COD works (configurable ON/OFF).
-        // Cash on counter and Card on counter do NOT exist (hidden).
+        // Online Selling Mode (Razorpay parity):
+        // UPI, Card, Netbanking, COD (if enabled)
+        if (tabCardOnline) tabCardOnline.style.display = enabledMethods.includes('CARD') ? 'inline-flex' : 'none';
+        if (tabNetbanking) tabNetbanking.style.display = enabledMethods.includes('NETBANKING') ? 'inline-flex' : 'none';
         if (tabCod) tabCod.style.display = enabledMethods.includes('COD') ? 'inline-flex' : 'none';
         if (tabCash) tabCash.style.display = 'none';
         if (tabCard) tabCard.style.display = 'none';
 
+        if (pcCardOnline) pcCardOnline.style.display = enabledMethods.includes('CARD') ? 'block' : 'none';
+        if (pcNetbanking) pcNetbanking.style.display = enabledMethods.includes('NETBANKING') ? 'block' : 'none';
         if (pcCod) pcCod.style.display = enabledMethods.includes('COD') ? 'block' : 'none';
         if (pcCash) pcCash.style.display = 'none';
         if (pcCard) pcCard.style.display = 'none';
@@ -1085,11 +1080,15 @@
         // Offline Selling Mode:
         // Cash works (configurable ON/OFF).
         // Card works (configurable ON/OFF).
-        // COD does NOT exist (hidden).
+        // COD and Online Cards do NOT exist (hidden).
+        if (tabCardOnline) tabCardOnline.style.display = 'none';
+        if (tabNetbanking) tabNetbanking.style.display = 'none';
         if (tabCod) tabCod.style.display = 'none';
         if (tabCash) tabCash.style.display = enabledMethods.includes('CASH_COUNTER') ? 'inline-flex' : 'none';
         if (tabCard) tabCard.style.display = enabledMethods.includes('CARD_COUNTER') ? 'inline-flex' : 'none';
 
+        if (pcCardOnline) pcCardOnline.style.display = 'none';
+        if (pcNetbanking) pcNetbanking.style.display = 'none';
         if (pcCod) pcCod.style.display = 'none';
         if (pcCash) pcCash.style.display = enabledMethods.includes('CASH_COUNTER') ? 'block' : 'none';
         if (pcCard) pcCard.style.display = enabledMethods.includes('CARD_COUNTER') ? 'block' : 'none';
@@ -1104,6 +1103,8 @@
     function updateMethodTabsUI(method) {
       const tabs = [
         { id: 'tabMethodUpi', method: 'UPI' },
+        { id: 'tabMethodCardOnline', method: 'CARD' },
+        { id: 'tabMethodNetbanking', method: 'NETBANKING' },
         { id: 'tabMethodCod', method: 'COD' },
         { id: 'tabMethodCash', method: 'CASH_COUNTER' },
         { id: 'tabMethodCard', method: 'CARD_COUNTER' }
@@ -1120,6 +1121,8 @@
 
       const pcCards = [
         { id: 'pcMethodCardUpi', method: 'UPI' },
+        { id: 'pcMethodCardCardOnline', method: 'CARD' },
+        { id: 'pcMethodCardNetbanking', method: 'NETBANKING' },
         { id: 'pcMethodCardCod', method: 'COD' },
         { id: 'pcMethodCardCash', method: 'CASH_COUNTER' },
         { id: 'pcMethodCardCard', method: 'CARD_COUNTER' }
@@ -1138,8 +1141,10 @@
     function switchMethodFromDowntime() {
       const enabled = state?.enabledMethods || state?.branding?.enabledPaymentMethods || [];
       const sellingMode = state?.sellingMode || state?.branding?.sellingMode || 'OFFLINE';
-      if (sellingMode === 'ONLINE' && enabled.includes('COD')) {
-        selectPaymentMethod('COD');
+      if (sellingMode === 'ONLINE') {
+        if (enabled.includes('CARD')) selectPaymentMethod('CARD');
+        else if (enabled.includes('NETBANKING')) selectPaymentMethod('NETBANKING');
+        else if (enabled.includes('COD')) selectPaymentMethod('COD');
       } else if (enabled.includes('CASH_COUNTER')) {
         selectPaymentMethod('CASH_COUNTER');
       }
@@ -1153,6 +1158,14 @@
       if (method === 'UPI') {
         document.getElementById('viewUpiContent').hidden = false;
         document.getElementById('ypgStickyFooter').style.display = 'flex';
+      } else if (method === 'CARD') {
+        const vCardOnline = document.getElementById('viewOnlineCardContent');
+        if (vCardOnline) vCardOnline.hidden = false;
+        document.getElementById('ypgStickyFooter').style.display = 'none';
+      } else if (method === 'NETBANKING') {
+        const vNb = document.getElementById('viewNetbankingContent');
+        if (vNb) vNb.hidden = false;
+        document.getElementById('ypgStickyFooter').style.display = 'none';
       } else if (method === 'COD') {
         const vCod = document.getElementById('viewCodContent');
         if (vCod) vCod.hidden = false;
@@ -1183,7 +1196,17 @@
             state.status = resData.status;
           }
 
-          if (method === 'COD') {
+          if (method === 'CARD' || method === 'NETBANKING') {
+            runCountdown(resData.timeRemainingSeconds || 300, sec => {
+              const el = document.getElementById(method === 'CARD' ? 'cardTimerText' : 'nbTimerText');
+              if (el) el.textContent = formatTime(sec);
+            }, () => {
+              const el = document.getElementById(method === 'CARD' ? 'cardTimerText' : 'nbTimerText');
+              if (el) el.textContent = 'Expired';
+              fetch(`${API_BASE}/api/v1/checkout/${PAYMENT_ID}/expire`, { method: 'POST' }).catch(() => { });
+              loadState();
+            });
+          } else if (method === 'COD') {
             runCountdown(resData.timeRemainingSeconds || 300, sec => {
               const el = document.getElementById('codTimerText');
               if (el) el.textContent = formatTime(sec);
@@ -1215,6 +1238,241 @@
         }
       } catch (e) {
         console.warn('selectPaymentMethod network error:', e);
+      }
+    }
+
+    // --- RAZORPAY COMPATIBLE CARD, NETBANKING & UTR HANDLERS ---
+    let selectedBankCode = 'HDFC';
+    let pendingOnlinePaymentData = null;
+
+    function fillTestCard(type) {
+      const numInput = document.getElementById('cardInputNumber');
+      const expInput = document.getElementById('cardInputExpiry');
+      const cvvInput = document.getElementById('cardInputCvv');
+      const nameInput = document.getElementById('cardInputName');
+
+      if (type === 'visa') {
+        if (numInput) numInput.value = '4111 2222 3333 4444';
+      } else if (type === 'mastercard') {
+        if (numInput) numInput.value = '5123 4567 8901 2345';
+      } else if (type === 'rupay') {
+        if (numInput) numInput.value = '5081 2600 1234 5678';
+      }
+      if (expInput) expInput.value = '12 / 28';
+      if (cvvInput) cvvInput.value = '123';
+      if (nameInput && !nameInput.value) nameInput.value = (activeCustomer?.name || 'Gaurav Kumar');
+      if (numInput) handleCardNumberInput(numInput);
+    }
+
+    function handleCardNumberInput(input) {
+      let val = input.value.replace(/\D/g, '').substring(0, 16);
+      let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+      input.value = formatted;
+
+      const img = document.getElementById('cardBrandImg');
+      if (!img) return;
+
+      if (val.startsWith('4')) {
+        img.src = '/icons/visa.svg';
+        img.style.display = 'block';
+      } else if (/^5[1-5]/.test(val) || /^2[2-7]/.test(val)) {
+        img.src = '/icons/mastercard.svg';
+        img.style.display = 'block';
+      } else if (/^(508|60|65|81|82)/.test(val)) {
+        img.src = '/icons/rupay.svg';
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+    }
+
+    function handleCardExpiryInput(input) {
+      let val = input.value.replace(/\D/g, '').substring(0, 4);
+      if (val.length >= 3) {
+        input.value = val.substring(0, 2) + ' / ' + val.substring(2);
+      } else {
+        input.value = val;
+      }
+    }
+
+    function selectNetbank(code, el) {
+      selectedBankCode = code;
+      document.querySelectorAll('.ypg-nb-bank-tile').forEach(t => t.classList.remove('is-selected'));
+      if (el) el.classList.add('is-selected');
+
+      const select = document.getElementById('selectOtherBanks');
+      if (select) select.value = '';
+
+      const btnText = document.getElementById('btnPayNbText');
+      const bankNames = { HDFC: 'HDFC Bank', SBI: 'SBI', ICICI: 'ICICI Bank', AXIS: 'Axis Bank', KOTAK: 'Kotak Bank', PNB: 'PNB' };
+      if (btnText) {
+        btnText.textContent = `Pay via ${bankNames[code] || code} (₹${state?.amount || '{{AMOUNT}}'})`;
+      }
+    }
+
+    function handleOtherBankSelect(select) {
+      const code = select.value;
+      if (!code) return;
+      selectedBankCode = code;
+      document.querySelectorAll('.ypg-nb-bank-tile').forEach(t => t.classList.remove('is-selected'));
+
+      const bankName = select.options[select.selectedIndex]?.text || code;
+      const btnText = document.getElementById('btnPayNbText');
+      if (btnText) {
+        btnText.textContent = `Pay via ${bankName} (₹${state?.amount || '{{AMOUNT}}'})`;
+      }
+    }
+
+    function submitOnlineCardPayment() {
+      const numInput = document.getElementById('cardInputNumber');
+      const expInput = document.getElementById('cardInputExpiry');
+      const cvvInput = document.getElementById('cardInputCvv');
+      const nameInput = document.getElementById('cardInputName');
+
+      const rawNum = (numInput?.value || '').replace(/\D/g, '');
+      if (rawNum.length < 12) {
+        alert('Please enter a valid card number or click a Quick Test Card.');
+        if (numInput) numInput.focus();
+        return;
+      }
+
+      pendingOnlinePaymentData = {
+        method: 'CARD',
+        card: {
+          number: rawNum,
+          expiry: expInput?.value || '12/28',
+          cvv: cvvInput?.value || '123',
+          name: nameInput?.value || 'Cardholder'
+        }
+      };
+
+      // Open 3D Secure Modal
+      const modal = document.getElementById('bankOtpSimulationModal');
+      const simText = document.getElementById('simCardOrBankText');
+      const simTitle = document.getElementById('simBankTitle');
+      if (simText) simText.textContent = `•••• •••• •••• ${rawNum.slice(-4)}`;
+      if (simTitle) simTitle.textContent = 'Verified by Visa / Mastercard 3D Secure';
+      if (modal) modal.hidden = false;
+    }
+
+    function submitNetbankingPayment() {
+      pendingOnlinePaymentData = {
+        method: 'NETBANKING',
+        bank: selectedBankCode || 'HDFC'
+      };
+
+      const modal = document.getElementById('bankOtpSimulationModal');
+      const simText = document.getElementById('simCardOrBankText');
+      const simTitle = document.getElementById('simBankTitle');
+      if (simText) simText.textContent = `${selectedBankCode} Retail NetBanking`;
+      if (simTitle) simTitle.textContent = `${selectedBankCode} Bank 3D Secure Portal`;
+      if (modal) modal.hidden = false;
+    }
+
+    function closeBankOtpModal() {
+      const modal = document.getElementById('bankOtpSimulationModal');
+      if (modal) modal.hidden = true;
+    }
+
+    async function submitBankOtp() {
+      const btn = document.getElementById('btnSubmitBankOtp');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Verifying with Bank...';
+      }
+
+      try {
+        const payload = Object.assign({}, pendingOnlinePaymentData || { method: 'CARD' }, {
+          otp: document.getElementById('simBankOtpInput')?.value || '123456',
+          deviceId: DeviceIdentity?.currentDeviceId
+        });
+
+        const res = await fetch(`${API_BASE}/api/v1/checkout/${PAYMENT_ID}/pay-online`, {
+          method: 'POST',
+          headers: getApiHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        closeBankOtpModal();
+
+        if (res.ok && data.success) {
+          state.status = 'SUCCESS';
+          state.method = payload.method;
+          loadState();
+        } else {
+          alert(data.error || 'Bank authorization failed. Please try again.');
+        }
+      } catch (err) {
+        alert('Network error authorizing payment.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Authorize & Complete Payment';
+        }
+      }
+    }
+
+    async function submitManualUtr() {
+      const input = document.getElementById('upiManualUtrInput');
+      const feedback = document.getElementById('utrFeedbackMsg');
+      const btn = document.getElementById('btnSubmitUtr');
+      const utr = (input?.value || '').trim();
+
+      if (utr.length < 8) {
+        if (feedback) {
+          feedback.style.display = 'block';
+          feedback.style.background = '#fef2f2';
+          feedback.style.color = '#dc2626';
+          feedback.textContent = 'Please enter a valid 12-digit UPI reference number.';
+        }
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+      }
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#eff6ff';
+        feedback.style.color = '#1d4ed8';
+        feedback.textContent = 'Verifying UPI reference with banking observer...';
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/checkout/${PAYMENT_ID}/verify-utr`, {
+          method: 'POST',
+          headers: getApiHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ method: 'UPI', utr, deviceId: DeviceIdentity?.currentDeviceId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (feedback) {
+            feedback.style.background = '#f0fdf4';
+            feedback.style.color = '#15803d';
+            feedback.textContent = 'UPI Reference Confirmed! Finalizing payment...';
+          }
+          state.status = 'SUCCESS';
+          state.method = 'UPI';
+          setTimeout(() => { loadState(); }, 600);
+        } else {
+          if (feedback) {
+            feedback.style.background = '#fef2f2';
+            feedback.style.color = '#dc2626';
+            feedback.textContent = data.error || 'UTR verification failed. Please check the 12-digit number.';
+          }
+        }
+      } catch (err) {
+        if (feedback) {
+          feedback.style.background = '#fef2f2';
+          feedback.style.color = '#dc2626';
+          feedback.textContent = 'Network error verifying UTR.';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Verify UTR';
+        }
       }
     }
 
@@ -1967,38 +2225,12 @@
       // Auto-bind customer to payment session helper
       if (typeof autoBindCustomerToSession !== 'function') {
         window.autoBindCustomerToSession = async function(customerId, token) {
-          if (window.isAutoBindingSession || !PAYMENT_ID || !token || !customerId) return;
-          window.isAutoBindingSession = true;
-          try {
-            const res = await fetch(`${API_BASE}/api/v1/checkout/${PAYMENT_ID}/bind-customer`, {
-              method: 'POST',
-              headers: getApiHeaders({
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }),
-              body: JSON.stringify({ token, customerId })
-            });
-            if (res.ok) {
-              const boundData = await res.json().catch(() => null);
-              if (boundData && boundData.status && boundData.status !== 'INITIATED') {
-                loadState();
-              }
-            } else if (res.status === 401) {
-              clearPreservedIdentity();
-              activeCustomer = null;
-              activeToken = null;
-              setGatewayAuthMode(true);
-              goToAuthStep('mobile');
-              renderSavedAccountsUI();
-            }
-          } catch (e) {
-          } finally {
-            window.isAutoBindingSession = false;
-          }
+          // WhatsApp verification disabled: guest checkout active, no session binding needed
+          return;
         };
       }
 
-      // 3. Pre-Gateway Customer Authentication Gate (Preserves identity up to 1 week)
+            // 3. Customer Identity (WhatsApp verification disabled - instant direct checkout)
       if (data.customer) {
         activeCustomer = data.customer;
       } else if (!activeCustomer) {
@@ -2006,28 +2238,22 @@
         if (preserved && preserved.customer) {
           activeCustomer = preserved.customer;
           activeToken = preserved.token || activeToken;
+        } else {
+          const guestName = data.notes?.customer_name || data.metadata?.customer_name || 'Customer';
+          const guestMobile = data.notes?.customer_mobile || data.metadata?.customer_mobile || '9876543210';
+          activeCustomer = {
+            id: 'cust_' + (data.orderId || PAYMENT_ID || 'guest'),
+            name: guestName,
+            mobileNumber: guestMobile,
+            email: 'customer@checkout.local'
+          };
+          activeToken = 'tok_auto_guest';
         }
       }
-      const hasCustomer = Boolean(data.customer || activeCustomer);
 
-      if (!hasCustomer) {
-        setGatewayAuthMode(true);
-        const stepMob = document.getElementById('authStepMobile');
-        const isAlreadyOnMobile = stepMob && !stepMob.hidden;
-        if (!currentAuthStep || (currentAuthStep === 'mobile' && !isAlreadyOnMobile)) {
-          goToAuthStep('mobile');
-        }
-        renderSavedAccountsUI();
-        return;
-      }
-
-      // Authenticated Customer
       if (activeCustomer) {
         updateCustomerDisplay(activeCustomer);
-        // Automatically bind customer to the payment session if session is INITIATED or unbound
-        if (activeToken && PAYMENT_ID && (!data.customer || data.status === 'INITIATED')) {
-          window.autoBindCustomerToSession(activeCustomer.id, activeToken);
-        }
+        // autoBindCustomerToSession bypassed in guest checkout mode
       }
       setGatewayAuthMode(false);
 

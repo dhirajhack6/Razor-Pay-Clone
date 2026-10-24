@@ -417,4 +417,163 @@ export function registerPaymentRoutes(server, ctx) {
       ...(owner ? { metadata: session.metadata } : {})
     });
   });
+
+  // ==========================================
+  // RAZORPAY-COMPATIBLE PUBLIC REST API SUITE
+  // ==========================================
+
+  // Helper to resolve merchant from Basic Auth (key_id:key_secret) or headers
+  function resolveRazorpayMerchant(req) {
+    const authHeader = req.headers['authorization'] || '';
+    if (authHeader.startsWith('Basic ')) {
+      try {
+        const decoded = Buffer.from(authHeader.slice(6), 'base64').toString('utf8');
+        const [keyId] = decoded.split(':');
+        if (keyId) {
+          const m = ctx.merchantRepo.findById(keyId);
+          if (m) return m;
+        }
+      } catch {}
+    }
+    const merchantId = req.headers['x-merchant-id'] || req.headers['x-razorpay-account'];
+    if (merchantId) {
+      const m = ctx.merchantRepo.findById(merchantId);
+      if (m) return m;
+    }
+    return ctx.merchantRepo.getDefault ? ctx.merchantRepo.getDefault() : (ctx.merchantRepo.findById('00000000-0000-0000-0000-000000000001') || ctx.merchantRepo.findAll()[0]);
+  }
+
+  // Handler for Razorpay Order Creation: POST /v1/orders and POST /api/v1/orders
+  async function handleCreateRazorpayOrder(req, res) {
+    const body = await HttpServer.parseBody(req);
+    const merchant = resolveRazorpayMerchant(req);
+    if (!merchant) {
+      HttpServer.json(res, 400, { error: { code: 'BAD_REQUEST_ERROR', description: 'Merchant account not found.' } });
+      return;
+    }
+
+    if (!body.amount) {
+      HttpServer.json(res, 400, { error: { code: 'BAD_REQUEST_ERROR', description: 'amount is required in paise.' } });
+      return;
+    }
+
+    const amountPaise = typeof body.amount === 'number' || typeof body.amount === 'string'
+      ? BigInt(Math.round(Number(body.amount)))
+      : BigInt(body.amount);
+
+    const randomSuffix = Math.random().toString(36).substring(2, 10);
+    const orderId = body.receipt || `order_${randomSuffix}`;
+    const receivingAccount = ctx.accountRepo.findActiveForMerchant(merchant.id) || ctx.accountRepo.findAll()[0];
+
+    const session = ctx.sessionRepo.create({
+      merchantId: merchant.id,
+      receivingAccountId: null,
+      orderId,
+      amountPaise,
+      currency: body.currency || 'INR',
+      status: PaymentStatus.ACTIVE,
+      metadata: body.notes || {}
+    });
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    HttpServer.json(res, 201, {
+      id: session.id,
+      entity: 'order',
+      amount: Number(amountPaise),
+      amount_paid: 0,
+      amount_due: Number(amountPaise),
+      currency: session.currency,
+      receipt: body.receipt || orderId,
+      offer_id: null,
+      status: 'created',
+      attempts: 0,
+      notes: body.notes || {},
+      created_at: nowSeconds,
+      checkout_url: `${resolveCheckoutBaseUrl(merchant)}/checkout/${session.id}`
+    });
+  }
+
+  server.post('/v1/orders', handleCreateRazorpayOrder);
+  server.post('/api/v1/orders', handleCreateRazorpayOrder);
+
+  // Handler for Razorpay Order Status: GET /v1/orders/:id and GET /api/v1/orders/:id
+  async function handleGetRazorpayOrder(req, res, params) {
+    const session = ctx.sessionRepo.findById(params.id) || ctx.sessionRepo.findByOrderId('00000000-0000-0000-0000-000000000001', params.id);
+    if (!session) {
+      HttpServer.json(res, 404, { error: { code: 'BAD_REQUEST_ERROR', description: `Order not found: ${params.id}` } });
+      return;
+    }
+    const isPaid = session.status === PaymentStatus.SUCCESS;
+    const amountNum = Number(session.amountPaise);
+    HttpServer.json(res, 200, {
+      id: session.id,
+      entity: 'order',
+      amount: amountNum,
+      amount_paid: isPaid ? amountNum : 0,
+      amount_due: isPaid ? 0 : amountNum,
+      currency: session.currency,
+      receipt: session.orderId,
+      status: isPaid ? 'paid' : (session.status === PaymentStatus.ACTIVE ? 'attempted' : 'created'),
+      attempts: isPaid ? 1 : 0,
+      notes: session.metadata || {},
+      created_at: Math.floor(new Date(session.createdAt).getTime() / 1000)
+    });
+  }
+
+  server.get('/v1/orders/:id', handleGetRazorpayOrder);
+  server.get('/api/v1/orders/:id', handleGetRazorpayOrder);
+
+  // Handler for Razorpay Payment Query: GET /v1/payments/:id
+  async function handleGetRazorpayPayment(req, res, params) {
+    const session = ctx.sessionRepo.findById(params.id);
+    if (!session) {
+      HttpServer.json(res, 404, { error: { code: 'BAD_REQUEST_ERROR', description: `Payment not found: ${params.id}` } });
+      return;
+    }
+    const isSuccess = session.status === PaymentStatus.SUCCESS;
+    const amountNum = Number(session.amountPaise);
+    const methodStr = (session.method || 'upi').toLowerCase();
+    HttpServer.json(res, 200, {
+      id: `pay_${session.id.replace(/-/g, '').slice(0, 14)}`,
+      entity: 'payment',
+      amount: amountNum,
+      currency: session.currency,
+      status: isSuccess ? 'captured' : 'failed',
+      order_id: session.id,
+      invoice_id: null,
+      international: false,
+      method: methodStr === 'card_counter' ? 'card' : (methodStr === 'cash_counter' ? 'cash' : methodStr),
+      amount_refunded: 0,
+      refund_status: null,
+      captured: isSuccess,
+      description: `Payment for order ${session.orderId}`,
+      card_id: null,
+      bank: null,
+      wallet: null,
+      vpa: session.metadata?.vpa || null,
+      email: session.metadata?.email || 'customer@example.com',
+      contact: session.metadata?.contact || '+919999999999',
+      fee: 0,
+      tax: 0,
+      error_code: null,
+      error_description: null,
+      created_at: Math.floor(new Date(session.createdAt).getTime() / 1000)
+    });
+  }
+
+  server.get('/v1/payments/:id', handleGetRazorpayPayment);
+  server.get('/api/v1/payments/:id', handleGetRazorpayPayment);
+
+  // Handler for Razorpay Capture: POST /v1/payments/:id/capture
+  async function handleCaptureRazorpayPayment(req, res, params) {
+    const session = ctx.sessionRepo.findById(params.id);
+    if (!session) {
+      HttpServer.json(res, 404, { error: { code: 'BAD_REQUEST_ERROR', description: `Payment not found: ${params.id}` } });
+      return;
+    }
+    return handleGetRazorpayPayment(req, res, params);
+  }
+
+  server.post('/v1/payments/:id/capture', handleCaptureRazorpayPayment);
+  server.post('/api/v1/payments/:id/capture', handleCaptureRazorpayPayment);
 }

@@ -23,8 +23,8 @@ export class QueueEngine {
    * @param {number} [activeDurationMs=300000]
    * @returns {{ status: string, queuePosition: number, expiresAt: Date | null }}
    */
-  enqueueOrActivate(sessionId, receivingAccountId, activeDurationMs = 300000) {
-    const result = this.sessionRepo.acquireSlotAtomic(sessionId, receivingAccountId, activeDurationMs);
+  enqueueOrActivate(sessionId, receivingAccountId, activeDurationMs = 300000, options = {}) {
+    const result = this.sessionRepo.acquireSlotAtomic(sessionId, receivingAccountId, activeDurationMs, options);
 
     if (result.status === PaymentStatus.ACTIVE) {
       this.eventEmitter.emit('SESSION.ACTIVATED', {

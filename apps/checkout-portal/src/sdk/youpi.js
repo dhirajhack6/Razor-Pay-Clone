@@ -249,6 +249,8 @@
         targetUrl = this.options.checkoutUrl;
       } else if (this.options.paymentId) {
         targetUrl = `${this.options.portalUrl}/checkout/${this.options.paymentId}`;
+      } else if (this.options.orderId || this.options.order_id) {
+        targetUrl = `${this.options.portalUrl}/checkout/${this.options.orderId || this.options.order_id}`;
       } else {
         targetUrl = `${this.options.portalUrl}/checkout/demo`;
       }
@@ -386,10 +388,21 @@
       }
     }
 
+    _checkoutOrigin() {
+      if (this._iframeOrigin) return this._iframeOrigin;
+      try {
+        const u = new URL(this.options.checkoutUrl || this.options.portalUrl, window.location.href);
+        return u.origin;
+      } catch {
+        return null;
+      }
+    }
+
     _handleMessage(e) {
+      const expectedOrigin = this._checkoutOrigin();
+      if (expectedOrigin && e.origin !== expectedOrigin) return;
       // Ignore messages from any window other than our checkout iframe (spoofed success events).
       if (!this._iframe || e.source !== this._iframe.contentWindow) return;
-      if (!this._iframeOrigin || e.origin !== this._iframeOrigin) return;
       if (!e.data || typeof e.data !== 'object') return;
 
       const event = e.data.event;
@@ -404,6 +417,9 @@
           amount_received: Number(payload.amount || this.options.amount || 0),
           utr: payload.bankRef || payload.utr || payload.reference || '',
           timestamp: payload.completedAt || new Date().toISOString(),
+          razorpay_payment_id: payload.razorpay_payment_id || payload.razorpayPaymentId || `pay_${(payload.orderId || this.options.orderId || 'pay').replace(/[^a-zA-Z0-9]/g, '').slice(0, 14)}`,
+          razorpay_order_id: payload.orderId || this.options.orderId || this.options.order_id,
+          razorpay_signature: payload.razorpay_signature || `sig_${Math.random().toString(36).substring(2)}`,
           metadata: payload.metadata || this.options.metadata || {},
           raw: payload
         };
@@ -755,6 +771,102 @@
     }
   }
 
+  /**
+   * Razorpay Checkout API Compatibility Wrapper
+   * Supports `new Razorpay(options).open()` exactly like checkout.razorpay.com/v1/checkout.js
+   */
+  class Razorpay {
+    constructor(options = {}) {
+      this.options = options;
+      this.events = {};
+
+      let amt = options.amount;
+      if (typeof amt === 'number') {
+        amt = (amt >= 100 && Number.isInteger(amt)) ? (amt / 100).toFixed(2) : String(amt);
+      } else if (typeof amt === 'string') {
+        const num = parseFloat(amt);
+        amt = (!amt.includes('.') && num >= 100) ? (num / 100).toFixed(2) : amt;
+      }
+
+      const prefill = options.prefill || {};
+      const customer = {
+        name: prefill.name || '',
+        email: prefill.email || '',
+        phone: prefill.contact || prefill.phone || ''
+      };
+
+      const handler = options.handler;
+      const ondismiss = options.modal && options.modal.ondismiss;
+
+      this.instance = new YoupiCheckout({
+        key: options.key,
+        portalUrl: options.portalUrl || scriptConfig.portalUrl,
+        checkoutUrl: options.checkoutUrl,
+        orderId: options.order_id || options.orderId,
+        order_id: options.order_id || options.orderId,
+        amount: amt,
+        currency: options.currency || 'INR',
+        name: options.name,
+        description: options.description,
+        customer,
+        metadata: options.notes || {},
+        theme: { color: options.theme?.color || '#0b63e5' },
+        handler: (res) => {
+          const rzpPayload = {
+            razorpay_payment_id: res.razorpay_payment_id || `pay_${(res.order_id || 'pay').replace(/[^a-zA-Z0-9]/g, '').slice(0, 14)}`,
+            razorpay_order_id: res.order_id || options.order_id || '',
+            razorpay_signature: res.razorpay_signature || 'simulated_sig_' + Math.random().toString(36).slice(2)
+          };
+          if (typeof handler === 'function') {
+            handler(rzpPayload);
+          }
+          if (typeof this.events['payment.success'] === 'function') {
+            this.events['payment.success'](rzpPayload);
+          }
+        },
+        onClose: () => {
+          if (typeof ondismiss === 'function') {
+            ondismiss();
+          }
+          if (typeof this.events['modal.ondismiss'] === 'function') {
+            this.events['modal.ondismiss']();
+          }
+        },
+        onFailed: (err) => {
+          const errPayload = {
+            error: {
+              code: 'PAYMENT_FAILED',
+              description: err.reason || 'Payment failed or cancelled',
+              source: 'gateway',
+              step: 'payment_authorization',
+              reason: err.reason || 'payment_failed',
+              metadata: {
+                order_id: options.order_id || '',
+                payment_id: err.raw?.razorpay_payment_id || ''
+              }
+            }
+          };
+          if (typeof this.events['payment.failed'] === 'function') {
+            this.events['payment.failed'](errPayload);
+          }
+        }
+      });
+    }
+
+    on(event, handler) {
+      this.events[event] = handler;
+      return this;
+    }
+
+    open() {
+      return this.instance.open();
+    }
+
+    close() {
+      return this.instance.close();
+    }
+  }
+
   // Auto-bind click listener for all [data-youpi-pay] buttons on page
   if (isBrowser) {
     document.addEventListener('click', function (e) {
@@ -769,9 +881,11 @@
   // Export globals
   globalScope.YoupiCheckout = YoupiCheckout;
   globalScope.Youpi = YoupiCheckout;
+  globalScope.Razorpay = Razorpay;
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = YoupiCheckout;
     module.exports.YoupiCheckout = YoupiCheckout;
     module.exports.Youpi = YoupiCheckout;
+    module.exports.Razorpay = Razorpay;
   }
 })(typeof window !== 'undefined' ? window : globalThis);

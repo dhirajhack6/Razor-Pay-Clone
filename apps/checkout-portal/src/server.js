@@ -233,12 +233,16 @@ export class CheckoutServer {
       : 'It is not recommended to pay by UPI right now as the server is facing downtime. We recommend paying by cash instead.');
 
     const sellingMode = state?.sellingMode || state?.branding?.sellingMode || 'ONLINE';
-    const enabledMethods = state?.enabledMethods || state?.branding?.enabledPaymentMethods || ['UPI'];
+    const enabledMethods = state?.enabledMethods || state?.branding?.enabledPaymentMethods || ['UPI', 'CARD', 'NETBANKING'];
     const showMethodBar = (enabledMethods && enabledMethods.length > 1) ? 'flex' : 'none';
     const tabCodStyle = (sellingMode === 'ONLINE' && enabledMethods.includes('COD')) ? 'display:inline-flex;' : 'display:none;';
+    const tabCardOnlineStyle = (sellingMode === 'ONLINE' && (enabledMethods.includes('CARD') || !enabledMethods.length)) ? 'display:inline-flex;' : 'display:none;';
+    const tabNetbankingStyle = (sellingMode === 'ONLINE' && (enabledMethods.includes('NETBANKING') || !enabledMethods.length)) ? 'display:inline-flex;' : 'display:none;';
     const tabCashStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CASH_COUNTER')) ? 'display:inline-flex;' : 'display:none;';
     const tabCardStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CARD_COUNTER')) ? 'display:inline-flex;' : 'display:none;';
     const pcCodStyle = (sellingMode === 'ONLINE' && enabledMethods.includes('COD')) ? 'display:block;' : 'display:none;';
+    const pcCardOnlineStyle = (sellingMode === 'ONLINE' && (enabledMethods.includes('CARD') || !enabledMethods.length)) ? 'display:block;' : 'display:none;';
+    const pcNetbankingStyle = (sellingMode === 'ONLINE' && (enabledMethods.includes('NETBANKING') || !enabledMethods.length)) ? 'display:block;' : 'display:none;';
     const pcCashStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CASH_COUNTER')) ? 'display:block;' : 'display:none;';
     const pcCardStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CARD_COUNTER')) ? 'display:block;' : 'display:none;';
 
@@ -265,9 +269,13 @@ export class CheckoutServer {
       DOWNTIME_MSG: alertMsg,
       METHOD_SELECTOR_DISPLAY: showMethodBar,
       TAB_COD_STYLE: tabCodStyle,
+      TAB_CARD_ONLINE_STYLE: tabCardOnlineStyle,
+      TAB_NETBANKING_STYLE: tabNetbankingStyle,
       TAB_CASH_STYLE: tabCashStyle,
       TAB_CARD_STYLE: tabCardStyle,
       PC_COD_STYLE: pcCodStyle,
+      PC_CARD_ONLINE_STYLE: pcCardOnlineStyle,
+      PC_NETBANKING_STYLE: pcNetbankingStyle,
       PC_CASH_STYLE: pcCashStyle,
       PC_CARD_STYLE: pcCardStyle,
       DOWNTIME_ALT_BTN_DISPLAY: downtimeAltBtnDisplay,
@@ -295,8 +303,8 @@ export class CheckoutServer {
         return;
       }
 
-      // Transparent API Proxy: /api/* -> Payment Core REST API
-      if (pathname.startsWith('/api/')) {
+      // Transparent API Proxy: /api/* or /v1/* (except /v1/checkout.js) -> Payment Core REST API
+      if (pathname.startsWith('/api/') || (pathname.startsWith('/v1/') && pathname !== '/v1/checkout.js')) {
         const targetPort = Number(process.env.PAYMENT_API_PORT || 6100);
         const proxyReq = http.request({
           hostname: '127.0.0.1',
@@ -324,8 +332,8 @@ export class CheckoutServer {
         return;
       }
 
-      // Official SDK script: GET /youpi.js or /sdk/youpi-checkout.js
-      if (pathname === '/youpi.js' || pathname === '/sdk/youpi.js' || pathname === '/sdk/youpi-checkout.js') {
+      // Official SDK script: GET /youpi.js or /checkout.js or /v1/checkout.js
+      if (pathname === '/youpi.js' || pathname === '/checkout.js' || pathname === '/v1/checkout.js' || pathname === '/sdk/youpi.js' || pathname === '/sdk/youpi-checkout.js') {
         try {
           const resolvedSdkPath = fs.existsSync(path.join(__dirname, 'sdk', 'youpi.js'))
             ? path.join(__dirname, 'sdk', 'youpi.js')

@@ -87,10 +87,13 @@ export class PaymentSessionRepository {
    * If slot is free, session transitions to ACTIVE with 5:00 window.
    * If slot is occupied, session transitions to QUEUED with sequence position.
    */
-  acquireSlotAtomic(sessionId, receivingAccountId, durationMs = 300000) {
+  acquireSlotAtomic(sessionId, receivingAccountId, durationMs = 300000, options = {}) {
     return this.db.transaction(() => {
       const now = new Date();
       const nowIso = now.toISOString();
+      const allowConcurrent = options?.allowConcurrent ||
+        process.env.ENABLE_CONCURRENT_CHECKOUT === 'true' ||
+        process.env.RAZORPAY_MODE === 'true';
 
       // Check for current active or processing session on this receiving account
       let activeRow = this.db.queryOne(`
@@ -126,8 +129,8 @@ export class PaymentSessionRepository {
         };
       }
 
-      if (!activeRow) {
-        // Slot is vacant! Grant ACTIVE slot.
+      if (!activeRow || allowConcurrent) {
+        // Slot is vacant or concurrent checkout is enabled! Grant ACTIVE slot.
         // Enforce the transition graph: a terminal or PROCESSING session must never be
         // revived to ACTIVE by a concurrent queue tick.
         const currentStatus = this.findById(sessionId)?.status;

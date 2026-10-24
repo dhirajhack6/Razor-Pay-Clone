@@ -27,6 +27,9 @@ export enum PublicPaymentOutcome {
  */
 export enum PaymentMethod {
   UPI = 'UPI',
+  CARD = 'CARD',
+  NETBANKING = 'NETBANKING',
+  WALLET = 'WALLET',
   COD = 'COD',
   CASH_COUNTER = 'CASH_COUNTER',
   CARD_COUNTER = 'CARD_COUNTER'

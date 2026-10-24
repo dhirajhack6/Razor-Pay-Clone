@@ -3052,3 +3052,237 @@
         max-height: 170px !important;
       }
     }
+
+    /* --- RAZORPAY COMPATIBLE ONLINE MODES STYLING --- */
+    .ypg-utr-verify-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .ypg-utr-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .ypg-utr-card-sub {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .ypg-utr-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .ypg-utr-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-family: monospace;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .ypg-utr-input:focus {
+      border-color: #0b63e5;
+    }
+    .ypg-utr-submit-btn {
+      background: #0b63e5;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 0 16px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .ypg-utr-submit-btn:hover {
+      opacity: 0.9;
+    }
+    .ypg-utr-feedback {
+      margin-top: 8px;
+      font-size: 11.5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    /* Test Cards Helper Bar */
+    .ypg-test-cards-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 10px 0 14px 0;
+      flex-wrap: wrap;
+    }
+    .ypg-test-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .ypg-chip-test-card {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ypg-chip-test-card:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+
+    /* Card Form Styles */
+    .ypg-card-form-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .ypg-form-group {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .ypg-form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .ypg-form-input, .ypg-form-select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .ypg-form-input:focus, .ypg-form-select:focus {
+      border-color: #0b63e5;
+      box-shadow: 0 0 0 3px rgba(11, 99, 229, 0.1);
+    }
+    .ypg-input-with-brand {
+      position: relative;
+    }
+    .ypg-card-brand-indicator {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .ypg-cvv-tip {
+      font-size: 12px;
+      cursor: help;
+      color: #94a3b8;
+    }
+    .ypg-save-card-row {
+      margin: 10px 0 14px 0;
+      text-align: left;
+    }
+    .ypg-checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11.5px;
+      color: #475569;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+    .ypg-checkbox-label input {
+      margin-top: 2px;
+      accent-color: #0b63e5;
+    }
+    .ypg-card-trust-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    /* Netbanking Grid Styles */
+    .ypg-nb-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ypg-nb-bank-tile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .ypg-nb-bank-tile:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+    .ypg-nb-bank-tile.is-selected {
+      border-color: #0b63e5;
+      background: #eff6ff;
+    }
+    .ypg-nb-tile-radio {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .ypg-nb-bank-tile.is-selected .ypg-nb-tile-radio {
+      border-color: #0b63e5;
+    }
+    .ypg-nb-bank-tile.is-selected .ypg-nb-tile-radio::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #0b63e5;
+    }
+    .ypg-nb-tile-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }

@@ -99,6 +99,7 @@ function updateAmountUI() {
   const btnDisp = document.getElementById('btnAmountDisplay');
   if (dispEl) dispEl.textContent = formatted;
   if (btnDisp) btnDisp.textContent = formatted;
+  document.querySelectorAll('.rzpAmountDisplay').forEach(el => { el.textContent = formatted; });
 }
 
 // --- PURCHASE INITIATION (Using Official Universal YouPI Integration) ---
@@ -159,6 +160,68 @@ async function startGatewayPurchase() {
     alert('Error launching YOUPI Gateway: ' + err.message);
     btn.disabled = false;
     btn.innerHTML = oldHtml;
+  }
+}
+
+// --- RAZORPAY STANDARD CHECKOUT INVOCATION ---
+async function startRazorpayCheckout() {
+  const btn = document.getElementById('btnInitiateRazorpayCheckout');
+  const oldHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Opening Razorpay Standard Checkout...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        price: currentAmount,
+        productName: 'E-Commerce Purchase (Razorpay Mode)',
+        coins: Math.round(currentAmount)
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.checkoutUrl) {
+      alert(data.error || 'Failed to create checkout order.');
+      if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; }
+      return;
+    }
+
+    // Razorpay Standard Syntax: new Razorpay(options).open()
+    const rzp = new window.Razorpay({
+      key: 'rzp_live_51AbcDefGhIjKl',
+      amount: Math.round(currentAmount * 100), // in paise
+      currency: 'INR',
+      name: 'YOUPI E-Commerce Store',
+      description: 'Razorpay Standard Checkout Experience',
+      order_id: data.orderId,
+      checkoutUrl: data.checkoutUrl,
+      prefill: {
+        name: 'Gaurav Kumar',
+        email: 'gaurav.kumar@example.com',
+        contact: '+919876543210'
+      },
+      theme: {
+        color: '#0b63e5'
+      },
+      handler: function(response) {
+        if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; }
+        showCelebrationModal(response.razorpay_order_id, response.razorpay_payment_id, currentAmount);
+      },
+      modal: {
+        ondismiss: function() {
+          if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; }
+        }
+      }
+    });
+
+    rzp.open();
+  } catch (err) {
+    alert('Error launching Razorpay Checkout: ' + err.message);
+    if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; }
   }
 }
 
