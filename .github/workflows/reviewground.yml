@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run ReviewGround AI Review
-        uses: arungupta1526/reviewground@a95e4dab1fd2b8bb9d02b6f3fc9a7f5c89d1cc76 # v1
+        uses: arungupta1526/reviewground@f2f81b5a658aa4386d7b437ad05a1302270b906e # v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-pr-description-update: 'true'
